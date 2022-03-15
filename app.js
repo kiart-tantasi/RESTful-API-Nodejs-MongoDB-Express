@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -6,22 +8,23 @@ app.use(express.json());
 // MongoDB SETUP
 const MongoClient = require("mongodb").MongoClient;
 const ObjectId = require("mongodb").ObjectId;
-const url = "mongodb://localhost:27017/";
+const url = process.env.DB_URL;
 
 // CREATE DATABASE
 function createDatabase(dbName) {
   MongoClient.connect(url + dbName, (err, db) => {
     if (err) {
+      db.close();
       console.log(err);
     } else {
-      console.log("Database named", dbName, "created.");
       db.close();
+      console.log("Database named", dbName, "created.");
     }
   });
 }
 
 // CREATE COLLECTION
-function createCollection(dbName = "testDB", cltName) {
+function createCollection(dbName = "nameDB", cltName) {
   MongoClient.connect(url, (err, db) => {
     if (err) {
       console.log(err);
@@ -29,10 +32,11 @@ function createCollection(dbName = "testDB", cltName) {
       const dbo = db.db(null);
       dbo.createCollection(cltName, (err, res) => {
         if (err) {
+          db.close();
           console.log(err);
         } else {
-          console.log("Collection named", cltName, "created.");
           db.close();
+          console.log("Collection named", cltName, "created.");
         }
       });
     }
@@ -45,14 +49,13 @@ app
   // GET ALL ITEMS
   .get(function (req, res) {
     MongoClient.connect(url, (err, db) => {
-      const dbo = db.db("testDB");
+      const dbo = db.db(process.env.DB);
       dbo
         .collection("items")
         .find({})
         .toArray((err, results) => {
-          console.log(results);
-          res.send(results);
           db.close();
+          res.send(results);
         });
     });
   })
@@ -60,18 +63,18 @@ app
   // ADD A NEW ITEM
   .post(function (req, res) {
     const itemName = req.body.name;
-    const itemDes = req.body.des;
+    const itemDesc = req.body.desc;
 
     MongoClient.connect(url, (err, db) => {
-      const dbo = db.db("testDB");
-      const newItem = { name: itemName, des: itemDes };
+      const dbo = db.db(process.env.DB);
+      const newItem = { name: itemName, desc: itemDesc };
       dbo.collection("items").insertOne(newItem, (err, result) => {
         if (err) {
+          db.close();
           console.log(err);
         } else {
-          console.log(result);
-          res.sendStatus(200);
           db.close();
+          res.sendStatus(200);
         }
       });
     });
@@ -85,16 +88,16 @@ app
   .get(function (req, res) {
     const itemId = req.params.itemId;
     MongoClient.connect(url, (err, db) => {
-      const dbo = db.db("testDB");
+      const dbo = db.db(process.env.DB);
       dbo
         .collection("items")
         .findOne({ _id: ObjectId(itemId) }, (err, result) => {
           if (err) {
+            db.close();
             console.log(err);
           } else {
-            console.log(result);
-            res.send(result);
             db.close();
+            res.send(result);
           }
         });
     });
@@ -104,16 +107,16 @@ app
   .delete(function (req, res) {
     const itemId = req.params.itemId;
     MongoClient.connect(url, (err, db) => {
-      const dbo = db.db("testDB");
+      const dbo = db.db(process.env.DB);
       dbo
         .collection("items")
         .deleteOne({ _id: ObjectId(itemId) }, (err, result) => {
           if (err) {
+            db.close();
             console.log(err);
           } else {
-            console.log(result);
-            res.sendStatus(200);
             db.close();
+            res.sendStatus(200);
           }
         });
     });
@@ -122,22 +125,22 @@ app
   // UPDATE
   .patch(function (req, res) {
     const itemId = req.params.itemId;
-    const newDescription = req.body.des;
+    const newDescription = req.body.desc;
 
     MongoClient.connect(url, (err, db) => {
-      const dbo = db.db("testDB");
+      const dbo = db.db(process.env.DB);
       dbo
         .collection("items")
         .updateOne(
           { _id: ObjectId(itemId) },
-          { $set: { des: newDescription } },
+          { $set: { desc: newDescription } },
           (err, result) => {
             if (err) {
+              db.close();
               console.log(err);
             } else {
-              console.log(result);
-              res.sendStatus(200);
               db.close();
+              res.sendStatus(200);
             }
           }
         );
