@@ -43,9 +43,9 @@ function createCollection(dbName = "nameDB", cltName) {
   });
 }
 
-app
-  .route("/items")
+app.route("/").get(function (req, res) {res.redirect("/items")});
 
+app.route("/items")
   // GET ALL ITEMS
   .get(function (req, res) {
     MongoClient.connect(url, (err, db) => {
@@ -81,8 +81,7 @@ app
   });
 
 // SPECIFIC ROUTE
-app
-  .route("/items/:itemId")
+app.route("/items/:itemId")
 
   // GET SPECIFIC ITEM
   .get(function (req, res) {

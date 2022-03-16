@@ -105,3 +105,4 @@ dist
 
 ec2
 node_modules
+app.env
